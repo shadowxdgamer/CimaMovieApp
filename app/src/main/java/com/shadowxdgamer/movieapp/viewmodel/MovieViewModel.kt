@@ -16,7 +16,9 @@ class MovieViewModel : ViewModel() {
     // ✅ State holder class
     data class UiState(
         val isLoading: Boolean = true,
-        val movies: List<Movie> = emptyList()
+        val movies: List<Movie> = emptyList(),
+        val currentPage: Int = 1,
+        val totalPages: Int = 525 // or dynamically fetched later
     )
 
     // ✅ State variable (Compose will observe this)
@@ -41,7 +43,9 @@ class MovieViewModel : ViewModel() {
         // Simulate a loading delay later using coroutines
         uiState = UiState(
             isLoading = false,
-            movies = movies
+            movies = movies,
+            currentPage = page,
+            totalPages = 525
         )
         }
     }

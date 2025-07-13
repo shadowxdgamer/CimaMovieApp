@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,7 +60,10 @@ fun HomeScreen(viewModel : MovieViewModel = viewModel()) {
         MovieListScreen(
             modifier = Modifier.padding(padding), // 👈 apply it here
             movies = uiState.movies,
-            isLoading = uiState.isLoading
+            isLoading = uiState.isLoading,
+            currentPage = uiState.currentPage,
+            totalPages = uiState.totalPages,
+            onPageClick = { page -> viewModel.loadMovies(page) }
         )
     }
 }
@@ -105,7 +110,14 @@ fun MovieCard(movie: Movie) {
 }
 
 @Composable
-fun MovieListScreen(modifier: Modifier = Modifier,movies: List<Movie>, isLoading: Boolean = false) {
+fun MovieListScreen(modifier: Modifier = Modifier,
+                    movies: List<Movie>,
+                    isLoading: Boolean = false,
+                    currentPage: Int,
+                    totalPages: Int,
+                    onPageClick: (Int) -> Unit
+
+) {
     when {
         isLoading -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -118,14 +130,48 @@ fun MovieListScreen(modifier: Modifier = Modifier,movies: List<Movie>, isLoading
             }
         }
         else -> {
+            Column(modifier = modifier) {
             LazyColumn(
-                modifier = modifier,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(movies) { movie ->
                     MovieCard(movie)
                 }
+            }
+            PaginationControls(
+                currentPage = currentPage,
+                totalPages = totalPages,
+                onPageClick = onPageClick
+            )
+        }
+        }
+    }
+}
+
+@Composable
+fun PaginationControls(
+    currentPage: Int,
+    totalPages: Int,
+    onPageClick: (Int) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        for (page in currentPage..minOf(currentPage + 4, totalPages)) {
+            Button(
+                onClick = { onPageClick(page) },
+                colors = if (page == currentPage)
+                    ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                else
+                    ButtonDefaults.buttonColors()
+            ) {
+                Text(page.toString())
             }
         }
     }
