@@ -73,4 +73,8 @@ dependencies {
 
     // Accompanist for things like placeholder shimmer (optional)
     implementation("com.google.accompanist:accompanist-placeholder-material:0.35.0-alpha")
+
+    //Media player
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
 }

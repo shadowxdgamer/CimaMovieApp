@@ -1,7 +1,5 @@
 package com.shadowxdgamer.movieapp.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -28,10 +26,11 @@ import org.jsoup.Jsoup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerScreen(videoUrl: String) {
+fun PlayerScreen(videoUrl: String,onServerClick: (String) -> Unit) {
     val context = LocalContext.current
     var servers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var selectedServerUrl by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(videoUrl) {
         withContext(Dispatchers.IO) {
@@ -75,8 +74,7 @@ fun PlayerScreen(videoUrl: String) {
                         ListItem(
                             headlineContent = { Text(name) },
                             modifier = Modifier.clickable {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
-                                context.startActivity(intent)
+                                onServerClick(link)
                             }
                         )
                     }
