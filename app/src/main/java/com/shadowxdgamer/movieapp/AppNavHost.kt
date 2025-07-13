@@ -6,9 +6,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.shadowxdgamer.movieapp.ui.screens.ExoPlayerScreen
 import com.shadowxdgamer.movieapp.ui.screens.HomeScreen
 import com.shadowxdgamer.movieapp.ui.screens.PlayerScreen
+import com.shadowxdgamer.movieapp.ui.screens.WebViewPlayerScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -35,15 +35,16 @@ fun AppNavHost() {
                 onServerClick = { serverUrl ->
                     // This is now the correct place to navigate from
                     val encodedUrl = URLEncoder.encode(serverUrl, "UTF-8")
-                    navController.navigate("video/$encodedUrl")
+                    navController.navigate("webview_player/$encodedUrl")
                 })
         }
+
         composable(
-            route = "video/{url}",
+            route = "webview_player/{url}", // Changed route name for clarity
             arguments = listOf(navArgument("url") { type = NavType.StringType })
         ) { backStackEntry ->
             val url = URLDecoder.decode(backStackEntry.arguments?.getString("url")!!, "UTF-8")
-            ExoPlayerScreen(url)
+            WebViewPlayerScreen(url) // Use the new screen
         }
     }
 }
