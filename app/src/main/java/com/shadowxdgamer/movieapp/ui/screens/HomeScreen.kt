@@ -1,6 +1,7 @@
 package com.shadowxdgamer.movieapp.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -62,11 +60,13 @@ import com.shadowxdgamer.movieapp.viewmodel.MovieViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel : MovieViewModel = viewModel()) {
+fun HomeScreen(viewModel : MovieViewModel = viewModel(), onMovieClick : (Movie) -> Unit) {
     val uiState = viewModel.uiState
     // Load movies only once
     LaunchedEffect(Unit) {
-        viewModel.loadMovies()
+        if (uiState.movies.isEmpty()) {
+            viewModel.loadMovies() // Defaults to page 1, which is correct for a fresh start
+        }
     }
     Scaffold(
         topBar = {
@@ -79,7 +79,8 @@ fun HomeScreen(viewModel : MovieViewModel = viewModel()) {
             isLoading = uiState.isLoading,
             currentPage = uiState.currentPage,
             totalPages = uiState.totalPages,
-            onPageClick = { page -> viewModel.loadMovies(page) }
+            onPageClick = { page -> viewModel.loadMovies(page) },
+            onMovieClick = onMovieClick
         )
     }
 }
@@ -90,7 +91,8 @@ fun MovieListScreen(modifier: Modifier = Modifier,
                     isLoading: Boolean = false,
                     currentPage: Int,
                     totalPages: Int,
-                    onPageClick: (Int) -> Unit
+                    onPageClick: (Int) -> Unit,
+                    onMovieClick : (Movie) -> Unit
 
 ) {
     when {
@@ -114,7 +116,7 @@ fun MovieListScreen(modifier: Modifier = Modifier,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(movies) { movie ->
-                        MovieCard(movie)
+                        MovieCard(movie,onClick = { onMovieClick(movie) })
                     }
                 }
                 PaginationControls(
@@ -128,11 +130,12 @@ fun MovieListScreen(modifier: Modifier = Modifier,
 }
 
 @Composable
-fun MovieCard(movie: Movie) {
+fun MovieCard(movie: Movie, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min),
+            .height(IntrinsicSize.Min)
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(6.dp),
         shape = MaterialTheme.shapes.medium
     ) {
