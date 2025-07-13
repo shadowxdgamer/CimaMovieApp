@@ -56,5 +56,21 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("org.jsoup:jsoup:1.17.2") // Web scraping
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
+
+    // Coroutines (for background scraping, network, etc.)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // Navigation Compose (optional but highly recommended)
+    implementation("androidx.navigation:navigation-compose:2.9.1")
+    // Web scraping
+    implementation("org.jsoup:jsoup:1.17.2")
+
+    // Coil for image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Accompanist for things like placeholder shimmer (optional)
+    implementation("com.google.accompanist:accompanist-placeholder-material:0.35.0-alpha")
 }
