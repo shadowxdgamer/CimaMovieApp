@@ -16,21 +16,37 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -65,6 +81,49 @@ fun HomeScreen(viewModel : MovieViewModel = viewModel()) {
             totalPages = uiState.totalPages,
             onPageClick = { page -> viewModel.loadMovies(page) }
         )
+    }
+}
+
+@Composable
+fun MovieListScreen(modifier: Modifier = Modifier,
+                    movies: List<Movie>,
+                    isLoading: Boolean = false,
+                    currentPage: Int,
+                    totalPages: Int,
+                    onPageClick: (Int) -> Unit
+
+) {
+    when {
+        isLoading -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+        movies.isEmpty() -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No movies found.")
+            }
+        }
+        else -> {
+            Column(modifier = modifier) {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(movies) { movie ->
+                        MovieCard(movie)
+                    }
+                }
+                PaginationControls(
+                    currentPage = currentPage,
+                    totalPages = totalPages,
+                    onPageChange = onPageClick
+                )
+            }
+        }
     }
 }
 
@@ -110,69 +169,71 @@ fun MovieCard(movie: Movie) {
 }
 
 @Composable
-fun MovieListScreen(modifier: Modifier = Modifier,
-                    movies: List<Movie>,
-                    isLoading: Boolean = false,
-                    currentPage: Int,
-                    totalPages: Int,
-                    onPageClick: (Int) -> Unit
-
-) {
-    when {
-        isLoading -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-        movies.isEmpty() -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No movies found.")
-            }
-        }
-        else -> {
-            Column(modifier = modifier) {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(movies) { movie ->
-                    MovieCard(movie)
-                }
-            }
-            PaginationControls(
-                currentPage = currentPage,
-                totalPages = totalPages,
-                onPageClick = onPageClick
-            )
-        }
-        }
-    }
-}
-
-@Composable
 fun PaginationControls(
     currentPage: Int,
     totalPages: Int,
-    onPageClick: (Int) -> Unit
+    onPageChange: (Int) -> Unit
 ) {
+    var showDialog by remember { mutableStateOf(false) }
     Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(8.dp)
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        for (page in currentPage..minOf(currentPage + 4, totalPages)) {
-            Button(
-                onClick = { onPageClick(page) },
-                colors = if (page == currentPage)
-                    ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                else
-                    ButtonDefaults.buttonColors()
-            ) {
-                Text(page.toString())
-            }
+        Button(
+            onClick = { onPageChange(currentPage - 1) },
+            enabled = currentPage > 1
+        ) {
+            Icon(Icons.AutoMirrored.Default.KeyboardArrowLeft, contentDescription = "Previous")
         }
+
+        TextButton(onClick = { showDialog = true }) {
+            Text("Page $currentPage of $totalPages")
+            Icon(Icons.Default.ArrowDropDown,contentDescription = "Arrow Drop Down")
+        }
+
+        Button(
+            onClick = { onPageChange(currentPage + 1) },
+            enabled = currentPage < totalPages
+        ) {
+            Icon(Icons.AutoMirrored.Default.KeyboardArrowRight, contentDescription = "Next")
+        }
+    }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {},
+            title = { Text("Jump to Page") },
+            text = {
+                Column {
+                    var inputPage by remember { mutableStateOf(currentPage.toString()) }
+
+                    OutlinedTextField(
+                        value = inputPage,
+                        onValueChange = { inputPage = it.filter { c -> c.isDigit() } },
+                        label = { Text("Page number") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            val target = inputPage.toIntOrNull()
+                            if (target != null && target in 1..totalPages) {
+                                onPageChange(target)
+                                showDialog = false
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Go")
+                    }
+                }
+            }
+        )
     }
 }
