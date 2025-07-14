@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -65,8 +66,6 @@ dependencies {
 
     // Navigation Compose (optional but highly recommended)
     implementation("androidx.navigation:navigation-compose:2.9.1")
-    // Web scraping
-    implementation("org.jsoup:jsoup:1.17.2")
 
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
@@ -77,4 +76,11 @@ dependencies {
     //Media player
     implementation("androidx.media3:media3-exoplayer:1.3.1")
     implementation("androidx.media3:media3-ui:1.3.1")
+
+    //KTOR
+    implementation("io.ktor:ktor-client-core:2.3.4")
+    implementation("io.ktor:ktor-client-cio:2.3.4")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.4")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }
