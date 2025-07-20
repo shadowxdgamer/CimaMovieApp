@@ -11,6 +11,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CimaMovieApp"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
         <activity
@@ -24,6 +25,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+NEW: PlayerActivity is declared here.
+Only this activity handles orientation changes itself to prevent reloading.
+-->
+        <activity
+            android:name=".PlayerActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.CimaMovieApp" />
     </application>
 
 </manifest>

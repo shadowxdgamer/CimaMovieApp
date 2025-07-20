@@ -1,64 +1,137 @@
 package com.shadowxdgamer.movieapp.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowxdgamer.movieapp.Service.VidsrcApi
-import com.shadowxdgamer.movieapp.model.VidsrcMovie
-import kotlinx.coroutines.Dispatchers
+import com.shadowxdgamer.movieapp.model.TmdbMovie
+import com.shadowxdgamer.movieapp.service.TMDBApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-class MovieViewModel(val state: SavedStateHandle
-) : ViewModel() {
-    private val TAG = "MovieViewModel"
-    // ✅ State holder class
-    data class UiState(
-        val isLoading: Boolean = true,
-        val movies: List<VidsrcMovie> = emptyList(),
-        val currentPage: Int = 1,
-        val totalPages: Int = 1
-    )
+data class CategoryState(
+    val movies: List<TmdbMovie> = emptyList(),
+    val page: Int = 1,
+    val isLoading: Boolean = false,
+    val hasMore: Boolean = true
+)
 
-    // ✅ State variable (Compose will observe this) && added SavedStateHandle
-    var uiState by mutableStateOf(
-        UiState(
-            currentPage = state["currentPage"] ?: 1,
-        )
-    )
+data class UiState(
+    val trending: CategoryState = CategoryState(),
+    val nowPlaying: CategoryState = CategoryState(),
+    val action: CategoryState = CategoryState(),
+    val popular: CategoryState = CategoryState()
+)
+
+class MovieViewModel : ViewModel() {
+    var uiState by mutableStateOf(UiState())
         private set
 
-    // ✅ Simulate loading movies
-    fun loadMovies(page: Int = 1) {
-        uiState = uiState.copy(isLoading = true)
+    fun loadPopularMovies() {
+        val current = uiState.popular
+        if (current.isLoading || !current.hasMore) return
 
+        uiState = uiState.copy(popular = current.copy(isLoading = true))
 
         viewModelScope.launch {
-            val movies = withContext(Dispatchers.IO) {
-                try {
-                    val response = withContext(Dispatchers.IO) {
-                        VidsrcApi.fetchMovies(page)
-                    }
-                    Log.d(TAG, "Successfully fetched ${response.result.size} movies for page $page")
-                    uiState = UiState(
-                        isLoading = false,
-                        movies = response.result,
-                        currentPage = page,
-                        totalPages = response.pages
-                    )
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to load movies", e)
-                    e.printStackTrace()
-                    uiState = uiState.copy(isLoading = false)
-                }
-            }
+            try {
+                val response = TMDBApi.fetchPopularMovies(current.page)
+                val newList = current.movies + response.results
+                val hasMore = current.page < response.totalPages
 
-        // Save to SavedStateHandle
-        state["currentPage"] = page
+                uiState = uiState.copy(
+                    popular = current.copy(
+                        movies = newList,
+                        page = current.page + 1,
+                        isLoading = false,
+                        hasMore = hasMore
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                uiState = uiState.copy(popular = current.copy(isLoading = false))
+            }
+        }
+    }
+
+    fun loadTrending() {
+        val current = uiState.trending
+        if (current.isLoading || !current.hasMore) return
+
+        uiState = uiState.copy(trending = current.copy(isLoading = true))
+
+        viewModelScope.launch {
+            try {
+                val response = TMDBApi.fetchTrendingMovies(current.page)
+                val newList = current.movies + response.results
+                val hasMore = current.page < response.totalPages
+
+                uiState = uiState.copy(
+                    trending = current.copy(
+                        movies = newList,
+                        page = current.page + 1,
+                        isLoading = false,
+                        hasMore = hasMore
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                uiState = uiState.copy(trending = current.copy(isLoading = false))
+            }
+        }
+    }
+
+    fun loadNowPlaying() {
+        val current = uiState.nowPlaying
+        if (current.isLoading || !current.hasMore) return
+
+        uiState = uiState.copy(nowPlaying = current.copy(isLoading = true))
+
+        viewModelScope.launch {
+            try {
+                val response = TMDBApi.fetchNowPlaying(current.page)
+                val newList = current.movies + response.results
+                val hasMore = current.page < response.totalPages
+
+                uiState = uiState.copy(
+                    nowPlaying = current.copy(
+                        movies = newList,
+                        page = current.page + 1,
+                        isLoading = false,
+                        hasMore = hasMore
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                uiState = uiState.copy(nowPlaying = current.copy(isLoading = false))
+            }
+        }
+    }
+
+    fun loadActionMovies() {
+        val current = uiState.action
+        if (current.isLoading || !current.hasMore) return
+
+        uiState = uiState.copy(action = current.copy(isLoading = true))
+
+        viewModelScope.launch {
+            try {
+                val response = TMDBApi.fetchMoviesByGenre(genreId = 28, page = current.page)
+                val newList = current.movies + response.results
+                val hasMore = current.page < response.totalPages
+
+                uiState = uiState.copy(
+                    action = current.copy(
+                        movies = newList,
+                        page = current.page + 1,
+                        isLoading = false,
+                        hasMore = hasMore
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                uiState = uiState.copy(action = current.copy(isLoading = false))
+            }
         }
     }
 }
