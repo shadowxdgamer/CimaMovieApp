@@ -35,8 +35,6 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
     val context = LocalActivity.current as Activity
     var isCustomViewVisible by remember { mutableStateOf(false) }
 
-    // The DisposableEffect that forced landscape has been removed.
-
     val chromeClient = remember {
         object : WebChromeClient() {
             private var customView: View? = null
