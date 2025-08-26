@@ -90,4 +90,7 @@ dependencies {
 
     // THIS LIBRARY CONTAINS THE 'items' FUNCTION FOR COMPOSE
     implementation("androidx.paging:paging-compose:3.3.0")
+    // Icons
+    implementation("androidx.compose.material:material-icons-extended")
+
 }

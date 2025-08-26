@@ -53,4 +53,11 @@ object TMDBApi {
             parameter("language", "en-US")
         }.body()
     }
+    suspend fun searchMovies(query: String, page: Int): TmdbMovieResponse {
+        return client.get("$BASE_URL/search/movie") {
+            parameter("api_key", API_KEY)
+            parameter("query", query)
+            parameter("page", page)
+        }.body()
+    }
 }
