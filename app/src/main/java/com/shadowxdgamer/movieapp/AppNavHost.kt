@@ -3,15 +3,14 @@ package com.shadowxdgamer.movieapp
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.shadowxdgamer.movieapp.ui.screens.CategoryScreen
 import com.shadowxdgamer.movieapp.ui.screens.HomeScreen
-import com.shadowxdgamer.movieapp.ui.screens.PlayerScreen
-import java.net.URLDecoder
-
 
 @Composable
 fun AppNavHost() {
@@ -21,36 +20,40 @@ fun AppNavHost() {
     NavHost(navController, startDestination = "home") {
         composable("home") {
             HomeScreen(
-//                onMovieClick = { movie ->
-//                    //val encodedUrl = URLEncoder.encode(movie.embed_url, "UTF-8")
-//                    val encodedUrl = URLEncoder.encode("https://vidsrc.cc/v3/embed/movie/tt5433140?autoPlay=false", "UTF-8")
-//                    //val encodedUrl = URLEncoder.encode("https://player.autoembed.cc/embed/movie/tt3359350", "UTF-8")
-//                    navController.navigate("player/$encodedUrl")
-//                },
                 onMovieClick = { movie ->
-                    // The URL that will be loaded.
-                    // IMPORTANT: Do NOT URL-encode this string.
-                    val urlToLoad = "https://vidsrc.cc/v3/embed/movie/tt5433140?autoPlay=false"
+                    // Construct the URL dynamically using the movie's TMDB ID.
+                    val urlToLoad = "https://vidsrc.cc/v3/embed/movie/${movie.id}"
 
-                    // Create an Intent to launch the PlayerActivity
                     val intent = Intent(context, PlayerActivity::class.java).apply {
-                        // Pass the plain, un-encoded URL string to the new activity.
                         putExtra("EMBED_URL", urlToLoad)
                     }
-                    // Start the activity
                     context.startActivity(intent)
                 },
-                onGenresClick = {"todo"}
+                // NEW: Handle clicks on "See All"
+                onSeeAllClick = { categoryTitle ->
+                    navController.navigate("category/$categoryTitle")
+                },
             )
         }
         composable(
-            "player/{embedUrl}",
-            arguments = listOf(navArgument("embedUrl") { type = NavType.StringType })
+            "category/{title}",
+            arguments = listOf(navArgument("title") { type = NavType.StringType })
         ) { backStackEntry ->
-            val embedUrl = URLDecoder.decode(backStackEntry.arguments?.getString("embedUrl")!!, "UTF-8")
-            PlayerScreen(embedUrl, onBackClick = { navController.popBackStack() })
+            val title = backStackEntry.arguments?.getString("title") ?: "Popular"
+            CategoryScreen(
+                categoryTitle = title,
+                // viewModel() will provide the shared ViewModel instance
+                viewModel = viewModel(),
+                onMovieClick = { movie -> // Construct the URL dynamically using the movie's TMDB ID.
+                    val urlToLoad = "https://vidsrc.cc/v3/embed/movie/${movie.id}"
+
+                    val intent = Intent(context, PlayerActivity::class.java).apply {
+                        putExtra("EMBED_URL", urlToLoad)
+                    }
+                    context.startActivity(intent)
+                               },
+                onBackClick = { navController.popBackStack() }
+            )
         }
-
-
     }
 }

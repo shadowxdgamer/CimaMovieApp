@@ -83,4 +83,11 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:2.3.4")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    // Jetpack Paging 3 for Compose
+    // THIS LIBRARY CONTAINS THE CORE PAGING LOGIC
+    implementation("androidx.paging:paging-runtime-ktx:3.3.0")
+
+    // THIS LIBRARY CONTAINS THE 'items' FUNCTION FOR COMPOSE
+    implementation("androidx.paging:paging-compose:3.3.0")
 }
