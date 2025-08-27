@@ -7,6 +7,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.shadowxdgamer.movieapp.model.Genre
+import com.shadowxdgamer.movieapp.model.MovieDetails
 import com.shadowxdgamer.movieapp.model.TmdbMovie
 import com.shadowxdgamer.movieapp.model.TmdbMovieResponse
 import com.shadowxdgamer.movieapp.repository.GenreRepository
@@ -16,9 +17,11 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
 class MovieViewModel : ViewModel() {
@@ -72,4 +75,23 @@ class MovieViewModel : ViewModel() {
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
     }
+
+    // --- Movie Details ---
+    private val _movieDetails = MutableStateFlow<MovieDetails?>(null)
+    val movieDetails = _movieDetails.asStateFlow()
+
+    fun getMovieDetails(movieId: Int) {
+        viewModelScope.launch {
+            // Set to null first to show a loading state
+            _movieDetails.value = null
+            try {
+                _movieDetails.value = TMDBApi.fetchMovieDetails(movieId)
+            } catch (e: Exception) {
+                // Handle error, maybe with a separate error state flow
+                e.printStackTrace()
+            }
+        }
+    }
+
+
 }

@@ -1,5 +1,6 @@
 package com.shadowxdgamer.movieapp.service
 
+import com.shadowxdgamer.movieapp.model.MovieDetails
 import com.shadowxdgamer.movieapp.model.TmdbMovieResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -58,6 +59,12 @@ object TMDBApi {
             parameter("api_key", API_KEY)
             parameter("query", query)
             parameter("page", page)
+        }.body()
+    }
+
+    suspend fun fetchMovieDetails(movieId: Int): MovieDetails {
+        return client.get("$BASE_URL/movie/$movieId") {
+            parameter("api_key", API_KEY)
         }.body()
     }
 }

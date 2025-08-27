@@ -9,6 +9,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,6 +26,7 @@ import com.shadowxdgamer.movieapp.ui.screens.CategoryScreen
 import com.shadowxdgamer.movieapp.ui.screens.GenreResultScreen
 import com.shadowxdgamer.movieapp.ui.screens.GenresScreen
 import com.shadowxdgamer.movieapp.ui.screens.HomeScreen
+import com.shadowxdgamer.movieapp.ui.screens.MovieDetailScreen
 import com.shadowxdgamer.movieapp.ui.screens.SearchScreen
 import com.shadowxdgamer.movieapp.ui.screens.SettingsScreen
 import com.shadowxdgamer.movieapp.ui.screens.SupportScreen
@@ -38,7 +40,11 @@ fun MainScreenView() {
     val context = LocalContext.current
 
     val onMovieClick: (com.shadowxdgamer.movieapp.model.TmdbMovie) -> Unit = { movie ->
-        val urlToLoad = "https://vidsrc.cc/v3/embed/movie/${movie.id}"
+        navController.navigate("movieDetail/${movie.id}")
+    }
+
+    val onWatchNowClick: (Int) -> Unit = { movieId ->
+        val urlToLoad = "https://vidsrc.cc/v3/embed/movie/$movieId"
         val intent = Intent(context, PlayerActivity::class.java).apply {
             putExtra("EMBED_URL", urlToLoad)
         }
@@ -116,6 +122,21 @@ fun MainScreenView() {
             //Support screen navigation
             composable("support") {
                 SupportScreen()
+            }
+
+            composable(
+                "movieDetail/{movieId}",
+                arguments = listOf(navArgument("movieId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val movieId = backStackEntry.arguments?.getInt("movieId") ?: 0
+                LaunchedEffect(movieId) {
+                    viewModel.getMovieDetails(movieId)
+                }
+                MovieDetailScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onWatchNowClick = onWatchNowClick
+                )
             }
 
         }
