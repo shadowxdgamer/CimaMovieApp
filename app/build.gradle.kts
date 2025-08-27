@@ -92,5 +92,8 @@ dependencies {
     implementation("androidx.paging:paging-compose:3.3.0")
     // Icons
     implementation("androidx.compose.material:material-icons-extended")
+    //Splashscreen API
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
 
 }

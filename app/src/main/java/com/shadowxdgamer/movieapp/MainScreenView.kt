@@ -27,6 +27,7 @@ import com.shadowxdgamer.movieapp.ui.screens.GenresScreen
 import com.shadowxdgamer.movieapp.ui.screens.HomeScreen
 import com.shadowxdgamer.movieapp.ui.screens.SearchScreen
 import com.shadowxdgamer.movieapp.ui.screens.SettingsScreen
+import com.shadowxdgamer.movieapp.ui.screens.SupportScreen
 import com.shadowxdgamer.movieapp.viewmodel.MovieViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,7 +83,7 @@ fun MainScreenView() {
             }
             composable(Screen.Genres.route) { GenresScreen(viewModel = viewModel, navController = navController) }
             composable(Screen.Search.route) { SearchScreen(viewModel = viewModel, onMovieClick = onMovieClick) }
-            composable(Screen.Settings.route) { SettingsScreen() }
+            composable(Screen.Settings.route) { SettingsScreen(navController = navController) }
 
             // Route for the "See All" screen
             composable("category/{title}") { backStackEntry ->
@@ -112,6 +113,11 @@ fun MainScreenView() {
                     onBackClick = { navController.popBackStack() }
                 )
             }
+            //Support screen navigation
+            composable("support") {
+                SupportScreen()
+            }
+
         }
     }
 }

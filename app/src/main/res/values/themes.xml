@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.CimaMovieApp" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_wrapper</item>
+
+        <item name="postSplashScreenTheme">@style/Theme.CimaMovieApp</item>
+    </style>
 </resources>
