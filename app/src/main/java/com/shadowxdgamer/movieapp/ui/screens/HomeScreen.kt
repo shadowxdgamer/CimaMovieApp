@@ -5,7 +5,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -13,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.shadowxdgamer.movieapp.model.TmdbMovie
 import com.shadowxdgamer.movieapp.ui.components.CategoryRow
@@ -21,6 +26,7 @@ import com.shadowxdgamer.movieapp.viewmodel.MovieViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    navController: NavController,
     viewModel: MovieViewModel = viewModel(),
     onMovieClick: (TmdbMovie) -> Unit,
     onSeeAllClick: (categoryTitle: String) -> Unit
@@ -30,10 +36,17 @@ fun HomeScreen(
     val popularMovies = viewModel.popularMovies.collectAsLazyPagingItems()
     val trendingMovies = viewModel.trendingMovies.collectAsLazyPagingItems()
     val nowPlayingMovies = viewModel.nowPlayingMovies.collectAsLazyPagingItems()
-
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Movies") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                viewModel.startChat() // Initialize the chat state
+                navController.navigate("chat") // Navigate to the chat screen
+            }) {
+                Icon(Icons.Default.Chat, contentDescription = "Open Chatbot")
+            }
         }
     ) { padding ->
         LazyColumn(
@@ -69,7 +82,6 @@ fun HomeScreen(
                     onSeeAllClick = { onSeeAllClick("Now Playing") }
                 )
             }
-
             // Add more categories here as you expand your ViewModel
         }
     }

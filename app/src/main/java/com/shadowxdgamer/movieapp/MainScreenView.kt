@@ -23,6 +23,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.shadowxdgamer.movieapp.ui.screens.CategoryScreen
+import com.shadowxdgamer.movieapp.ui.screens.ChatScreen
 import com.shadowxdgamer.movieapp.ui.screens.GenreResultScreen
 import com.shadowxdgamer.movieapp.ui.screens.GenresScreen
 import com.shadowxdgamer.movieapp.ui.screens.HomeScreen
@@ -82,6 +83,7 @@ fun MainScreenView() {
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
+                    navController = navController,
                     viewModel = viewModel,
                     onMovieClick = onMovieClick,
                     onSeeAllClick = { categoryTitle -> navController.navigate("category/$categoryTitle") }
@@ -136,6 +138,16 @@ fun MainScreenView() {
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
                     onWatchNowClick = onWatchNowClick
+                )
+            }
+            //Chatbot navigation
+            composable("chat") {
+                ChatScreen(
+                    onMovieClick = { movie ->
+                        navController.navigate("movieDetail/${movie.id}")
+                    },
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
 
