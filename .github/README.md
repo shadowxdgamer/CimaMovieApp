@@ -20,8 +20,6 @@
 
 ## 📸 Screenshots
 
-*(Here you can add screenshots of your app)*
-
 | Home Screen                                       | Movie Details                                     | AI Chatbot                                    |
 | ------------------------------------------------- | ------------------------------------------------- | --------------------------------------------- |
 | ![Home Screen Screenshot](screenshots/homescreen.jpeg) | ![Details Screen Screenshot](screenshots/moviedetails.jpeg) | ![Chatbot Screenshot](screenshots/chatbot.jpeg) |
