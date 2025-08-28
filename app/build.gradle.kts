@@ -15,8 +15,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -94,6 +94,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     //Splashscreen API
     implementation("androidx.core:core-splashscreen:1.0.1")
+    // AI BABY
+    implementation("com.google.ai.client.generativeai:generativeai:0.3.0")
 
 
 }

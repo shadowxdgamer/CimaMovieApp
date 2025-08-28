@@ -6,6 +6,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.google.ai.client.generativeai.Chat
+import com.google.ai.client.generativeai.type.content
 import com.shadowxdgamer.movieapp.model.Author
 import com.shadowxdgamer.movieapp.model.ChatMessage
 import com.shadowxdgamer.movieapp.model.Genre
@@ -13,6 +15,7 @@ import com.shadowxdgamer.movieapp.model.MovieDetails
 import com.shadowxdgamer.movieapp.model.TmdbMovie
 import com.shadowxdgamer.movieapp.model.TmdbMovieResponse
 import com.shadowxdgamer.movieapp.repository.GenreRepository
+import com.shadowxdgamer.movieapp.service.GenerativeAIService
 import com.shadowxdgamer.movieapp.service.MoviePagingSource
 import com.shadowxdgamer.movieapp.service.TMDBApi
 import kotlinx.coroutines.FlowPreview
@@ -24,11 +27,12 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import java.util.regex.Pattern
 
-
-private enum class ConversationState {
-    AWAITING_GENRE, AWAITING_CONFIRMATION
-}
+// to delete if i want to revert to old dumb AI
+//private enum class ConversationState {
+//    AWAITING_GENRE, AWAITING_CONFIRMATION
+//}
 
 @OptIn(FlowPreview::class)
 class MovieViewModel : ViewModel() {
@@ -104,69 +108,101 @@ class MovieViewModel : ViewModel() {
     private val _chatMessages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val chatMessages: StateFlow<List<ChatMessage>> = _chatMessages
 
-    private var conversationState = ConversationState.AWAITING_GENRE
-    private var selectedGenre: Genre? = null
+    // to delete if i want to revert to old dumb AI
+//    private var conversationState = ConversationState.AWAITING_GENRE
+//    private var selectedGenre: Genre? = null
+    // A variable to hold the active Gemini chat session
+    private var geminiChat: Chat? = null
 
     fun startChat() {
-        // Clear previous conversation and start a new one
-        conversationState = ConversationState.AWAITING_GENRE
-        selectedGenre = null
+        // The system prompt that tells the AI its personality and rules
+        val systemPrompt = """
+            You are MovieSphere Bot, a friendly and helpful chatbot that recommends one movie based on a user's request.
+            Your task is to:
+            1. Understand the user's request, remembering the context of the conversation (e.g., if they ask for "another one", you know what they mean).
+            2. Find ONE suitable movie.
+            3. Respond ONLY with the movie's official title and its TMDb ID in this exact format: TITLE (ID: 12345). Example: The Matrix (ID: 603).
+
+            Do not add any other words, explanations, or pleasantries. If you cannot find a movie or the request is unclear, respond with: "Error (ID: 0)".
+        """.trimIndent()
+
+        // Initialize the chat session with the system prompt
+        geminiChat = GenerativeAIService.generativeModel.startChat(
+            history = listOf(
+                content(role = "user") { text(systemPrompt) },
+                content(role = "model") { text("Understood. I am ready to recommend movies.") }
+            )
+        )
+
+        // Start the UI with a fresh greeting
         _chatMessages.value = listOf(
-            ChatMessage("Hi! I can help you find a movie. What genre are you in the mood for?", Author.BOT)
+            ChatMessage("Hi! I'm MovieSphere Bot. Ask me for a movie recommendation!", Author.BOT)
         )
     }
 
     fun onUserMessageSent(text: String) {
-        // Add the user's message to the list
         val userMessage = ChatMessage(text, Author.USER)
         _chatMessages.value = _chatMessages.value + userMessage
-
-        // Bot processes the message and responds
-        generateBotResponse(text)
+        sendMessageToGemini(text)
     }
 
-    private fun generateBotResponse(userInput: String) {
+    private fun sendMessageToGemini(userInput: String) {
         viewModelScope.launch {
-            when (conversationState) {
-                ConversationState.AWAITING_GENRE -> {
-                    // Try to find a genre that matches the user's input
-                    val matchedGenre = genres.value.firstOrNull { it.name.equals(userInput, ignoreCase = true) }
-                    if (matchedGenre != null) {
-                        selectedGenre = matchedGenre
-                        addBotMessage("Awesome, ${matchedGenre.name} is a great choice! Should I find a movie for you?")
-                        conversationState = ConversationState.AWAITING_CONFIRMATION
+            addBotMessage("Thinking...")
+
+            try {
+                // Send the user's message to the ongoing chat session
+                val response = geminiChat?.sendMessage(userInput)
+                val geminiResponse = response?.text?.trim() ?: ""
+
+                // Remove the "Thinking..." message
+                _chatMessages.value = _chatMessages.value.dropLast(1)
+
+                // The rest of the parsing logic is the same!
+                val pattern = Pattern.compile("(.+?)\\s*\\([Ii][Dd]\\s*:\\s*(\\d+)\\)")
+                val matcher = pattern.matcher(geminiResponse)
+
+                if (matcher.matches()) {
+                    val movieId = matcher.group(2)?.toIntOrNull()
+                    if (movieId != null && movieId != 0) {
+                        val movie = TMDBApi.fetchMovieDetails(movieId)
+                        val recommendation = ChatMessage(
+                            text = "Based on your request, I think you'll like this:",
+                            author = Author.BOT,
+                            movieRecommendation = movie.toTmdbMovie()
+                        )
+                        _chatMessages.value = _chatMessages.value + recommendation
                     } else {
-                        addBotMessage("Sorry, I don't recognize that genre. Please pick one like Action, Comedy, or Horror.")
+                        addBotMessage("I'm sorry, I couldn't find a movie based on that. Could you try being more specific?")
                     }
+                } else {
+                    addBotMessage(geminiResponse.ifBlank { "Sorry, I had trouble with that request." })
                 }
-                ConversationState.AWAITING_CONFIRMATION -> {
-                    if (userInput.contains("yes", ignoreCase = true) || userInput.contains("ok", ignoreCase = true)) {
-                        addBotMessage("Great! Searching for a ${selectedGenre?.name} movie...")
-                        try {
-                            // Fetch a random movie from the first page of the selected genre
-                            val response = TMDBApi.fetchMoviesByGenre(selectedGenre!!.id, 1)
-                            val movie = response.results.randomOrNull()
-                            if (movie != null) {
-                                val recommendation = ChatMessage(
-                                    text = "I think you'll like this one:",
-                                    author = Author.BOT,
-                                    movieRecommendation = movie
-                                )
-                                _chatMessages.value = _chatMessages.value + recommendation
-                            } else {
-                                addBotMessage("Sorry, I couldn't find a movie for that genre right now.")
-                            }
-                        } catch (e: Exception) {
-                            addBotMessage("Oops, something went wrong while searching.")
-                        }
-                    } else {
-                        addBotMessage("No problem! Let me know if you change your mind.")
-                    }
-                    // Reset the conversation
-                    conversationState = ConversationState.AWAITING_GENRE
+            } catch (e: Exception) {
+                // First, remove the "Thinking..." message
+                _chatMessages.value = _chatMessages.value.dropLast(1)
+
+                // Now, add your new error handling logic
+                if (e.message?.contains("rate limit", ignoreCase = true) == true) {
+                    addBotMessage("The bot is very popular right now! Please try again in a minute. 😅")
+                } else {
+                    // A fallback for any other type of error
+                    addBotMessage("Oops, something went wrong. Please try again.")
+                    e.printStackTrace() // Log the error for debugging
                 }
             }
         }
+    }
+
+    // Helper to convert MovieDetails to TmdbMovie for the poster card
+    private fun MovieDetails.toTmdbMovie(): TmdbMovie {
+        return TmdbMovie(
+            id = this.id,
+            title = this.title,
+            posterPath = this.posterPath,
+            releaseDate = this.releaseDate,
+            voteAverage = this.voteAverage
+        )
     }
 
     private fun addBotMessage(text: String) {

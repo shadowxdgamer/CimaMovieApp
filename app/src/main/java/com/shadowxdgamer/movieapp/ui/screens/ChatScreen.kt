@@ -107,7 +107,7 @@ fun ChatScreen(
                     value = textState,
                     onValueChange = { textState = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type a genre...") }
+                    placeholder = { Text("Type a message...") }
                 )
                 Spacer(Modifier.width(8.dp))
                 IconButton(onClick = {
