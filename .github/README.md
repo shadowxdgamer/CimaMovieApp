@@ -24,7 +24,7 @@
 
 | Home Screen                                       | Movie Details                                     | AI Chatbot                                    |
 | ------------------------------------------------- | ------------------------------------------------- | --------------------------------------------- |
-| ![Home Screen Screenshot](link_to_screenshot.png) | ![Details Screen Screenshot](link_to_screenshot.png) | ![Chatbot Screenshot](link_to_screenshot.png) |
+| ![Home Screen Screenshot](screenshots/homescreen.jpeg) | ![Details Screen Screenshot](screenshots/moviedetails.jpeg) | ![Chatbot Screenshot](screenshots/chatbot.jpeg) |
 
 ---
 
@@ -58,4 +58,4 @@ You can install the latest release of the app by following these steps:
 
 ## 📜 License
 
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/shadowxdgamer/CimaMovieApp/blob/master/LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
