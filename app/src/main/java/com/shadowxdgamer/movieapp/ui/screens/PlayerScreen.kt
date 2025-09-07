@@ -1,9 +1,11 @@
 package com.shadowxdgamer.movieapp.ui.screens
 
 import android.app.Activity
+import android.os.Message
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -57,11 +59,13 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
                 )
-                // Hide system bars when web content requests fullscreen
+
+                // Hide system bars but allow them to reappear on touch
                 val window = context.window
                 WindowCompat.getInsetsController(window, window.decorView).apply {
                     hide(WindowInsetsCompat.Type.systemBars())
-                    systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_BARS_BY_TOUCH
                 }
             }
 
@@ -73,14 +77,25 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
                 customViewCallback = null
                 isCustomViewVisible = false
 
-                // Show system bars when web content exits fullscreen
+                // Restore system bars
                 val window = context.window
-                WindowCompat.getInsetsController(window, window.decorView).show(WindowInsetsCompat.Type.systemBars())
+                WindowCompat.getInsetsController(window, window.decorView)
+                    .show(WindowInsetsCompat.Type.systemBars())
+            }
+
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: Message?
+            ): Boolean {
+                // Block popups (window.open, target=_blank)
+                return false
             }
         }
     }
 
-    // Handle the Android back button press only when the web player's custom view is showing
+    // Handle Android back button only if fullscreen custom view is active
     BackHandler(enabled = isCustomViewVisible) {
         chromeClient.onHideCustomView()
     }
@@ -89,18 +104,38 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
         AndroidView(
             factory = {
                 WebView(it).apply {
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.mediaPlaybackRequiresUserGesture = true
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        mediaPlaybackRequiresUserGesture = false
+
+                        // Security restrictions
+                        setSupportMultipleWindows(false) // no popups
+                        javaScriptCanOpenWindowsAutomatically = false
+                        allowFileAccess = false
+                        allowContentAccess = false
+                        safeBrowsingEnabled = true
+                    }
+
                     webChromeClient = chromeClient
-                    webViewClient = WebViewClient()
+                    webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(
+                            view: WebView,
+                            request: WebResourceRequest
+                        ): Boolean {
+                            val url = request.url.toString()
+                            // Allow only vidsrc.cc embeds, block everything else
+                            return !url.contains("vidsrc.cc")
+                        }
+                    }
+
                     loadUrl(embedUrl)
                 }
             },
             modifier = Modifier.fillMaxSize()
         )
 
-        // Our custom back button, always visible in the top-left corner
+        // Custom back button (always visible)
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
