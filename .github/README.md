@@ -47,7 +47,7 @@ This project is built with a modern tech stack, focusing on best practices for A
 You can install the latest release of the app by following these steps:
 
 1.  Go to the [Releases page](https://github.com/shadowxdgamer/CimaMovieApp/releases).
-2.  Download the `MovieSphere-v1.0.apk` file from the latest release.
+2.  Download the `MovieSphere.apk` file from the latest release.
 3.  Transfer the `.apk` file to your Android device and open it.
 4.  You may need to grant permission to "install from unknown sources."
 5.  Follow the on-screen prompts to install the app. Enjoy!
