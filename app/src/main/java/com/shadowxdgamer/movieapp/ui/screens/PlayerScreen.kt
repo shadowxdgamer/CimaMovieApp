@@ -1,6 +1,7 @@
 package com.shadowxdgamer.movieapp.ui.screens
 
 import android.app.Activity
+import android.os.Build
 import android.os.Message
 import android.view.View
 import android.view.ViewGroup
@@ -28,9 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 
 @Composable
 fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
@@ -59,14 +57,6 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
                 )
-
-                // Hide system bars but allow them to reappear on touch
-                val window = context.window
-                WindowCompat.getInsetsController(window, window.decorView).apply {
-                    hide(WindowInsetsCompat.Type.systemBars())
-                    systemBarsBehavior =
-                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_BARS_BY_TOUCH
-                }
             }
 
             override fun onHideCustomView() {
@@ -76,11 +66,6 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
                 customViewCallback?.onCustomViewHidden()
                 customViewCallback = null
                 isCustomViewVisible = false
-
-                // Restore system bars
-                val window = context.window
-                WindowCompat.getInsetsController(window, window.decorView)
-                    .show(WindowInsetsCompat.Type.systemBars())
             }
 
             override fun onCreateWindow(
@@ -114,7 +99,9 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
                         javaScriptCanOpenWindowsAutomatically = false
                         allowFileAccess = false
                         allowContentAccess = false
-                        safeBrowsingEnabled = true
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            safeBrowsingEnabled = true
+                        }
                     }
 
                     webChromeClient = chromeClient
