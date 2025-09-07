@@ -29,6 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 @Composable
 fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
@@ -57,6 +60,14 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
                 )
+
+                // 🔴 Hide system UI (status + nav bars) in fullscreen
+                val window = context.window
+                WindowCompat.getInsetsController(window, window.decorView).apply {
+                    hide(WindowInsetsCompat.Type.systemBars())
+                    systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
             }
 
             override fun onHideCustomView() {
@@ -66,6 +77,11 @@ fun PlayerScreen(embedUrl: String, onBackClick: () -> Unit) {
                 customViewCallback?.onCustomViewHidden()
                 customViewCallback = null
                 isCustomViewVisible = false
+
+                // 🔵 Restore system UI when exiting fullscreen
+                val window = context.window
+                WindowCompat.getInsetsController(window, window.decorView)
+                    .show(WindowInsetsCompat.Type.systemBars())
             }
 
             override fun onCreateWindow(
